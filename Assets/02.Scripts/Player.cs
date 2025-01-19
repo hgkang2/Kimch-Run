@@ -10,7 +10,12 @@ public class Player : MonoBehaviour
 
     public Animator PlayerAnimator;
 
+    public BoxCollider2D PlayerCollider;
+
     private bool isGrounded = true;
+
+    
+    public bool isInvincible = false;
 
     
     void Start()
@@ -29,6 +34,30 @@ public class Player : MonoBehaviour
         }
     }
 
+    public void KillPlayer()
+    {
+        PlayerCollider.enabled = false;
+        PlayerAnimator.enabled = false;
+        Rigidbody2D.AddForceY(jumpForce, ForceMode2D.Impulse);
+    }
+    void Hit()
+    {
+        GameManager.Instance.Lives -= 1;
+     
+    }
+    void Heal()
+    {
+        GameManager.Instance.Lives = Mathf.Min(3, GameManager.Instance.Lives + 1);
+    }
+    void StartInvincible()
+    {
+        isInvincible = true;
+        Invoke("StopInvincible", 5f); 
+    }
+    void StopInvincible()
+    {
+        isInvincible = false;
+    }    
     private void OnCollisionEnter2D(Collision2D collision)
     {
         if(collision.gameObject.name == "Platform")
@@ -38,6 +67,31 @@ public class Player : MonoBehaviour
                 PlayerAnimator.SetInteger("State", 2);
             }
             isGrounded = true;  
+        }
+    }
+
+    private void OnTriggerEnter2D(Collider2D collider)
+    {
+        if (collider.gameObject.tag == "enemy")
+        {
+            if (!isInvincible)
+            {
+                Destroy(collider.gameObject);
+                Hit();
+            }
+        }
+        else if (collider.gameObject.tag == "food")
+        {
+            Destroy(collider.gameObject);
+            Heal();
+        }
+        else if(collider.gameObject.tag == "golden")
+        {
+            if (isInvincible.Equals(true))
+                return;
+
+            Destroy(collider.gameObject);
+            StartInvincible();
         }
     }
 }
